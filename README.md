@@ -18,6 +18,8 @@ Pour démarrer le projet, suivez ces étapes pour installer et lancer le projet 
 
    ```bash
    npm install express mysql2 sequelize dotenv body-parser cors
+   ```
+   ```bash
    npm install --save-dev nodemon
    ```
 
