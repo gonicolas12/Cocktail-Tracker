@@ -43,5 +43,5 @@ Pour démarrer le projet, suivez ces étapes pour installer et lancer le projet 
 ### Auteurs :
 
    - [@NicolasGouy](https://github.com/gonicolas12)
-   - [@BrennMakouya](https://github.com/Brenn007)
    - [@JosuéAdami](https://github.com/Joadm973)
+   - [@BrennMakouya](https://github.com/Brenn007)
