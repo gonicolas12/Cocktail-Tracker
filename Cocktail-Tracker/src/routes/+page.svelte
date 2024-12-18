@@ -1,6 +1,15 @@
-<script>
+<script lang="ts">
     import { onMount } from 'svelte';
-    let cocktails = [];
+
+    type Cocktail = {
+        id: number;
+        title: string;
+        ingredients: string[];
+        likes: number;
+        dislikes: number;
+    };
+
+    let cocktails: Cocktail[] = [];
 
     onMount(async () => {
         const res = await fetch('/api/cocktails');
