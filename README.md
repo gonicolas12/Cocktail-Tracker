@@ -17,10 +17,10 @@ Pour démarrer le projet, suivez ces étapes pour installer et lancer le projet 
 **Installer les dépendances** :
 
    ```bash
-   npm install express mysql2 sequelize dotenv body-parser cors
+   npm install
    ```
    ```bash
-   npm install --save-dev nodemon
+   npm install @sveltejs/kit@latest
    ```
 
 **Lancer le serveur** :
@@ -28,17 +28,6 @@ Pour démarrer le projet, suivez ces étapes pour installer et lancer le projet 
    ```bash
    npm run dev
    ```
-
-**Démarrez XAMPP** :
-
-   - Ouvrez le panneau de contrôle de **XAMPP**
-   - Démarrez les services **Apache** et **MySQL**
-
-**Copiez la base de donnée** :
-
-   - Ouvrez http://localhost/phpmyadmin/
-   - Créez une nouvelle base de données nommée "**api_cocktail**"
-
 
 ### Auteurs :
 
