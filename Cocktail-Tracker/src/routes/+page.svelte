@@ -7,24 +7,14 @@
         dislikes: number;
     };
 
-    export let data: { cocktails: Cocktail[] };
-
-    // Ajout de données factices
-    data = {
-        cocktails: [
-            {
-                id: 1,
-                title: 'Mojito',
-                ingredients: ['Rhum', 'Menthe', 'Citron vert', 'Sucre'],
-                likes: 10,
-                dislikes: 2
-            }
-        ]
-    };
+    export let data: { cocktails: Cocktail[], error: string | null };
 </script>
 
 <main>
     <h1>Cocktail Tracker</h1>
+    {#if data.error}
+        <p style="color: red;">Erreur: {data.error}</p>
+    {/if}
     <ul>
         {#each data.cocktails as cocktail}
             <li>

@@ -5,6 +5,9 @@ export async function load() {
         .from('cocktails')
         .select('*');
 
+    console.log('Data:', data);
+    console.log('Error:', error);
+
     if (error) {
         console.error('Error:', error);
         return {
