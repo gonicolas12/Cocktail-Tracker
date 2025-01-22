@@ -8,6 +8,19 @@
     };
 
     export let data: { cocktails: Cocktail[] };
+
+    // Ajout de données factices
+    data = {
+        cocktails: [
+            {
+                id: 1,
+                title: 'Mojito',
+                ingredients: ['Rhum', 'Menthe', 'Citron vert', 'Sucre'],
+                likes: 10,
+                dislikes: 2
+            }
+        ]
+    };
 </script>
 
 <main>
