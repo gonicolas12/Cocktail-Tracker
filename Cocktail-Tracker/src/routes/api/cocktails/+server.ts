@@ -4,14 +4,17 @@ import { supabase } from '$lib/supabase';
 
 // GET all cocktails
 export const GET = async () => {
+    console.log('Fetching cocktails...');
     const { data, error } = await supabase
         .from('cocktails')
         .select('*');
 
     if (error) {
+        console.error('Supabase error:', error);
         return json({ error: error.message }, { status: 500 });
     }
 
+    console.log('Fetched data:', data);
     return json(data);
 };
 

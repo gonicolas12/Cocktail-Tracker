@@ -13,17 +13,24 @@
     let error: string | null = null;
 
     onMount(async () => {
-        try {
-            const res = await fetch('/api/cocktails');
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.error || 'Erreur lors du chargement des cocktails');
-            }
-            cocktails = await res.json();
-        } catch (e) {
-            error = e instanceof Error ? e.message : 'Une erreur est survenue';
+    try {
+        console.log('Fetching data...');
+        const res = await fetch('/api/cocktails');
+        console.log('Response:', res);
+        
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Erreur lors du chargement des cocktails');
         }
-    });
+        
+        const data = await res.json();
+        console.log('Received data:', data);
+        cocktails = data;
+    } catch (e) {
+        console.error('Error:', e);
+        error = e instanceof Error ? e.message : 'Une erreur est survenue';
+    }
+});
 </script>
 
 <main>
