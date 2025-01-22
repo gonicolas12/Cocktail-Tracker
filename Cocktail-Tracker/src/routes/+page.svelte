@@ -17,6 +17,7 @@
         console.log('Fetching data...');
         const res = await fetch('/api/cocktails');
         console.log('Response:', res);
+        console.log(cocktails)
         
         if (!res.ok) {
             const errorData = await res.json();
