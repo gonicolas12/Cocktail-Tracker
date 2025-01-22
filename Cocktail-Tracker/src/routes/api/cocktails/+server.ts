@@ -1,24 +1,40 @@
 import { json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
-
-
-// Mock Database (Replace with actual DB calls later)
-let cocktails = [
-    { id: 1, title: 'Mojito', ingredients: ['Rum', 'Mint', 'Lime', 'Sugar', 'Soda'], likes: 10, dislikes: 2 },
-    { id: 2, title: 'Margarita', ingredients: ['Tequila', 'Lime', 'Triple Sec'], likes: 15, dislikes: 1 },
-];
+import { supabase } from '$lib/supabase';
 
 // GET all cocktails
 export const GET = async () => {
-    return json(cocktails);
+    const { data, error } = await supabase
+        .from('cocktails')
+        .select('*');
+
+    if (error) {
+        return json({ error: error.message }, { status: 500 });
+    }
+
+    return json(data);
 };
 
 // POST a new cocktail
 export const POST = async ({ request }: RequestEvent) => {
     const newCocktail = await request.json();
-    newCocktail.id = cocktails.length + 1;
-    newCocktail.likes = 0;
-    newCocktail.dislikes = 0;
-    cocktails.push(newCocktail);
-    return json(newCocktail, { status: 201 });
+    
+    const { data, error } = await supabase
+        .from('cocktails')
+        .insert([
+            {
+                title: newCocktail.title,
+                ingredients: newCocktail.ingredients,
+                likes: 0,
+                dislikes: 0
+            }
+        ])
+        .select()
+        .single();
+
+    if (error) {
+        return json({ error: error.message }, { status: 500 });
+    }
+
+    return json(data, { status: 201 });
 };
