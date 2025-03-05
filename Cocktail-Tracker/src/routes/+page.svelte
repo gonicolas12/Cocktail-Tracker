@@ -7,7 +7,12 @@
         dislikes: number;
     };
 
-    export let data: { cocktails?: Cocktail[], error?: string | null };
+    export let data: { 
+        cocktails: Cocktail[], 
+        error: string | null,
+        debug?: any,
+        exception?: string
+    };
 </script>
 
 <main>
@@ -17,12 +22,21 @@
         <div style="background-color: #ffeeee; padding: 15px; border: 1px solid red; margin: 10px 0;">
             <h3>Erreur</h3>
             <p>{data.error}</p>
+            {#if data.exception}
+                <p>Exception: {data.exception}</p>
+            {/if}
         </div>
     {/if}
     
     <div style="background-color: #f5f5f5; padding: 15px; border: 1px solid #ddd; margin: 10px 0;">
         <h3>Informations de débogage</h3>
         <p>Nombre de cocktails: {data.cocktails?.length || 0}</p>
+        {#if data.debug}
+            <details>
+                <summary>Détails de débogage</summary>
+                <pre>{JSON.stringify(data.debug, null, 2)}</pre>
+            </details>
+        {/if}
         <details>
             <summary>Données brutes</summary>
             <pre>{JSON.stringify(data, null, 2)}</pre>
