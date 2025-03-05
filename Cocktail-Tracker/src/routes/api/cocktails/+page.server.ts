@@ -2,28 +2,33 @@ import { supabase } from '$lib/supabase';
 
 export async function load() {
     try {
-        // Extraction simplifiée des données
+        // Vérifiez d'abord que les variables d'environnement sont définies
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        
+        if (!supabaseUrl || !supabaseKey) {
+            return {
+                cocktails: [],
+                error: 'Variables d\'environnement Supabase manquantes'
+            };
+        }
+        
         const { data, error } = await supabase
             .from('cocktails')
             .select('*');
         
         if (error) {
-            console.error('Erreur Supabase:', error);
             return {
                 cocktails: [],
-                error: error.message
+                error: `Erreur Supabase: ${error.message}`
             };
         }
-        
-        // Aucune conversion n'est nécessaire pour le type text[]
-        // PostgreSQL envoie déjà les données comme un tableau JavaScript
         
         return {
             cocktails: data || [],
             error: null
         };
     } catch (e) {
-        console.error('Exception générale:', e);
         return {
             cocktails: [],
             error: e instanceof Error ? e.message : 'Erreur inconnue'
