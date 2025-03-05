@@ -7,14 +7,11 @@
         dislikes: number;
     };
 
-    export let data: { cocktails: Cocktail[], error: string | null };
+    export let data: { cocktails: Cocktail[] };
 </script>
 
 <main>
     <h1>Cocktail Tracker</h1>
-    {#if data.error}
-        <p style="color: red;">Erreur: {data.error}</p>
-    {/if}
     <ul>
         {#each data.cocktails as cocktail}
             <li>

@@ -5,17 +5,32 @@ export async function load() {
         .from('cocktails')
         .select('*');
 
-    console.log('Data:', data);
-    console.log('Error:', error);
+    console.log('Data brute:', data);
+
+    // Formater les données si nécessaire
+    const formattedData = data?.map(cocktail => {
+        // Si ingredients est une chaîne, la convertir en tableau
+        if (typeof cocktail.ingredients === 'string') {
+            try {
+                cocktail.ingredients = JSON.parse(cocktail.ingredients);
+            } catch (e) {
+                // Si le JSON.parse échoue, essayer de traiter comme une chaîne
+                cocktail.ingredients = cocktail.ingredients.split(',');
+            }
+        }
+        return cocktail;
+    });
 
     if (error) {
         console.error('Error:', error);
         return {
-            cocktails: []
+            cocktails: [],
+            error: error.message
         };
     }
 
     return {
-        cocktails: data ?? []
+        cocktails: formattedData ?? [],
+        error: null
     };
 }
