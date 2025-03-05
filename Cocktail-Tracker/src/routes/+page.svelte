@@ -8,76 +8,84 @@
     };
 </script>
 
-<div class="cocktails-container">
-    <div class="cocktails-header">
-        <h1>Nos cocktails</h1>
+<div class="container">
+    <div class="centered-content">
+        <h1 class="page-title">Nos cocktails</h1>
+        
+        <div class="button-container">
+            <a href="/create" class="create-btn">
+                <span>+</span> Ajouter un cocktail
+            </a>
+        </div>
+        
+        {#if data.error}
+            <div class="message error">
+                <p>{data.error}</p>
+            </div>
+        {/if}
+        
+        {#if data.cocktails.length === 0}
+            <div class="message info">
+                <p>Aucun cocktail disponible. Pourquoi ne pas en créer un?</p>
+            </div>
+        {:else}
+            <div class="cocktail-list">
+                {#each data.cocktails as cocktail (cocktail.id)}
+                    <CocktailCard {cocktail} />
+                {/each}
+            </div>
+        {/if}
     </div>
-    
-    <div class="add-button-container">
-        <a href="/create" class="create-btn">
-            <span>+</span> Ajouter un cocktail
-        </a>
-    </div>
-    
-    {#if data.error}
-        <div class="message error">
-            <p>{data.error}</p>
-        </div>
-    {/if}
-    
-    {#if data.cocktails.length === 0}
-        <div class="message info">
-            <p>Aucun cocktail disponible. Pourquoi ne pas en créer un?</p>
-        </div>
-    {:else}
-        <div class="cocktail-list">
-            {#each data.cocktails as cocktail (cocktail.id)}
-                <CocktailCard {cocktail} />
-            {/each}
-        </div>
-    {/if}
 </div>
 
 <style>
-    .cocktails-container {
+    .container {
         width: 100%;
-        max-width: 1100px;
         margin: 0 auto;
         padding: 0 20px;
     }
     
-    .cocktails-header {
-        margin-bottom: 0.75rem;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 0.5rem;
-    }
-    
-    .add-button-container {
-        margin-bottom: 1.5rem;
-    }
-    
-    .create-btn {
-        display: inline-flex;
+    .centered-content {
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 0.5rem;
-        background-color: #4a90e2;
-        color: white;
-        padding: 0.6rem 1.2rem;
-        border-radius: 4px;
-        font-weight: 500;
-        text-decoration: none;
-        transition: background-color 0.2s;
+        width: 100%;
+        margin-top: 1.5rem;
     }
     
-    .create-btn:hover {
-        background-color: #3a7bc8;
-        text-decoration: none;
+    .page-title {
+        text-align: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .button-container {
+        margin-bottom: 1.5rem;
+        text-align: center;
     }
     
     .cocktail-list {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        align-items: center;
         width: 100%;
+    }
+    
+    .message {
+        width: 500px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+    }
+    
+    .error {
+        background-color: #fff1f0;
+        border-left: 4px solid #ff4d4f;
+    }
+    
+    .info {
+        background-color: #e6f7ff;
+        border-left: 4px solid #1890ff;
     }
 </style>

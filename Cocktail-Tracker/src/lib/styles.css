@@ -54,13 +54,15 @@ button {
 
 /* Section des cocktails */
 .cocktails-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    /* Suppression du display: flex pour permettre l'empilement vertical */
     margin-bottom: 1.5rem;
     margin-top: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid #eee;
+}
+
+.add-button-container {
+    margin-bottom: 1.5rem;
 }
 
 .create-btn {
