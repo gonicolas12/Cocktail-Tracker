@@ -1,5 +1,4 @@
 import { supabase } from '$lib/supabase';
-import { dev } from '$app/environment';
 
 export async function load() {
     try {
@@ -14,77 +13,123 @@ export async function load() {
         if (!supabaseUrl || !supabaseKey) {
             return {
                 cocktails: [],
-                error: 'Configuration Supabase incomplète: variables d\'environnement manquantes',
-                debug: {
-                    supabaseUrlSet: !!supabaseUrl,
-                    supabaseKeySet: !!supabaseKey,
-                    envKeys: dev ? Object.keys(import.meta.env) : 'non affiché en production'
+                error: 'Configuration Supabase incomplète',
+                debug: { supabaseUrlSet: !!supabaseUrl, supabaseKeySet: !!supabaseKey }
+            };
+        }
+        
+        // Test de connexion basique
+        console.log('Test de connexion à Supabase...');
+        
+        try {
+            // Requête simple pour confirmer la connexion à la BD
+            const { error: connError } = await supabase.from('cocktails').select('count');
+            
+            if (connError) {
+                console.error('Erreur de connexion:', connError);
+                return {
+                    cocktails: [],
+                    error: `Erreur de connexion: ${connError.message}`,
+                    debug: { errorCode: connError.code, errorDetails: connError.details }
+                };
+            }
+            
+            console.log('Connexion établie avec succès');
+        } catch (connEx) {
+            console.error('Exception lors du test de connexion:', connEx);
+            return {
+                cocktails: [],
+                error: 'Exception lors du test de connexion',
+                exception: String(connEx)
+            };
+        }
+
+        // Vérification directe des tables
+        console.log('Liste des tables disponibles...');
+        const { data: tableList, error: tableError } = await supabase
+            .rpc('get_table_names'); // Procédure RPC intégrée pour lister les tables
+            
+        console.log('Tables disponibles:', tableList);
+        if (tableError) {
+            console.error('Erreur lors de la récupération des tables:', tableError);
+        }
+        
+        // Vérifier les politiques RLS
+        console.log('Vérification des politiques RLS...');
+        const { data: policies, error: policyError } = await supabase
+            .from('pg_policies')
+            .select('*')
+            .eq('tablename', 'cocktails');
+            
+        console.log('Politiques pour cocktails:', policies);
+        if (policyError) {
+            console.error('Erreur lors de la vérification des politiques:', policyError);
+        }
+        
+        // Liste des enregistrements avec une requête explicite
+        console.log('Tentative explicite de récupération des cocktails...');
+        
+        const { data: allData, error: listError } = await supabase
+            .from('cocktails')
+            .select('*')
+            .limit(100);
+            
+        console.log('Résultat de la requête explicite:', { dataLength: allData?.length });
+        console.log('Premier enregistrement:', allData?.[0]);
+        
+        if (listError) {
+            console.error('Erreur explicite:', listError);
+            return {
+                cocktails: [],
+                error: `Erreur explicite: ${listError.message}`,
+                debug: { 
+                    errorCode: listError.code, 
+                    errorDetails: listError.details 
                 }
             };
         }
         
-        // Vérifier la connexion à Supabase
-        try {
-            const { data: healthCheck, error: healthError } = await supabase.from('cocktails').select('count');
-            
-            if (healthError) {
-                return {
-                    cocktails: [],
-                    error: `Erreur de connexion Supabase: ${healthError.message}`,
-                    debug: {
-                        healthError,
-                        supabaseUrlPartial: supabaseUrl.substring(0, 12) + '...',
-                        supabaseKeyLength: supabaseKey.length
-                    }
-                };
-            }
-            
-            console.log('Connexion Supabase OK, health check:', healthCheck);
-        } catch (healthEx) {
-            return {
-                cocktails: [],
-                error: 'Erreur lors du test de connexion à Supabase',
-                exception: String(healthEx)
-            };
-        }
-        
         // Requête Supabase principale
+        console.log('Requête principale...');
         const { data, error } = await supabase
             .from('cocktails')
             .select('*');
             
         console.log('Réponse Supabase:', { dataLength: data?.length, error });
+        
+        if (data && data.length > 0) {
+            console.log('Premier cocktail:', data[0]);
+            console.log('Type d\'ingrédients:', typeof data[0].ingredients);
+            console.log('Valeur d\'ingrédients:', data[0].ingredients);
+        }
             
         if (error) {
             return {
                 cocktails: [],
                 error: `Erreur Supabase: ${error.message}`,
-                debug: { error }
-            };
-        }
-        
-        // Vérifier les données
-        if (!data || data.length === 0) {
-            return {
-                cocktails: [],
-                error: null,
-                debug: {
-                    message: "Aucune erreur, mais aucune donnée trouvée dans la table 'cocktails'",
-                    hasData: !!data,
-                    dataLength: data?.length || 0
+                debug: { 
+                    error,
+                    explicitQueryResult: {
+                        success: !!allData,
+                        length: allData?.length || 0
+                    }
                 }
             };
         }
         
         return {
-            cocktails: data,
+            cocktails: data || [],
             error: null,
             debug: {
                 hasData: !!data,
-                dataLength: data.length,
-                firstItem: data[0],
-                supabaseUrlSet: !!supabaseUrl,
-                supabaseKeySet: !!supabaseKey
+                dataLength: data?.length || 0,
+                tableList,
+                policies,
+                explicitQueryResult: {
+                    success: !!allData,
+                    length: allData?.length || 0
+                },
+                firstItem: data?.[0] || null
             }
         };
     } catch (e) {
@@ -92,8 +137,7 @@ export async function load() {
         return {
             cocktails: [],
             error: e instanceof Error ? e.message : 'Erreur inconnue',
-            exception: String(e),
-            debug: { type: typeof e }
+            exception: String(e)
         };
     }
 }
