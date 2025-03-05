@@ -2,7 +2,7 @@
     type Cocktail = {
         id: number;
         title: string;
-        ingredients: string[];
+        ingredients: string[] | string;
         likes: number;
         dislikes: number;
     };
@@ -13,6 +13,29 @@
         debug?: any,
         exception?: string
     };
+
+    // Fonction pour traiter les ingrédients dans différents formats
+    function formatIngredients(ingredients: string[] | string | null | undefined): string {
+        if (!ingredients) return 'Aucun ingrédient';
+        
+        if (Array.isArray(ingredients)) {
+            return ingredients.join(', ');
+        }
+        
+        if (typeof ingredients === 'string') {
+            try {
+                const parsed = JSON.parse(ingredients);
+                if (Array.isArray(parsed)) {
+                    return parsed.join(', ');
+                }
+                return String(parsed);
+            } catch {
+                return ingredients;
+            }
+        }
+        
+        return 'Format inconnu';
+    }
 </script>
 
 <main>
@@ -53,7 +76,7 @@
             {#each data.cocktails as cocktail}
                 <li style="background: white; margin-bottom: 15px; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <h3>{cocktail.title || 'Sans titre'}</h3>
-                    <p><strong>Ingrédients:</strong> {Array.isArray(cocktail.ingredients) ? cocktail.ingredients.join(', ') : 'Format inconnu'}</p>
+                    <p><strong>Ingrédients:</strong> {formatIngredients(cocktail.ingredients)}</p>
                     <div style="display: flex; gap: 15px;">
                         <span style="display: flex; align-items: center;">
                             <span style="margin-right: 5px;">👍</span> {cocktail.likes || 0}
