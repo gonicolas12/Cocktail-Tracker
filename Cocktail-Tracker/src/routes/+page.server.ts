@@ -1,12 +1,13 @@
 import { supabase } from '$lib/supabase';
+import { env } from '$env/dynamic/private';
 
 export async function load() {
     try {
         console.log('Chargement des données...');
         
         // Vérification des variables d'environnement
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const supabaseUrl = env.SUPABASE_URL;
+        const supabaseKey = env.SUPABASE_ANON_KEY;
         
         console.log('Variables URL/KEY définies:', !!supabaseUrl, !!supabaseKey);
         
