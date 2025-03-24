@@ -1,7 +1,7 @@
 import { supabase } from '$lib/supabase-server';
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
-import bcrypt from 'bcrypt';
+import { comparePassword } from '$lib/auth';
 
 export const actions: Actions = {
     default: async ({ request, cookies }) => {
@@ -38,7 +38,7 @@ export const actions: Actions = {
             }
             
             // Verify password
-            const isPasswordCorrect = await bcrypt.compare(password, user.password);
+            const isPasswordCorrect = comparePassword(password, user.password);
             
             if (!isPasswordCorrect) {
                 return fail(400, { 

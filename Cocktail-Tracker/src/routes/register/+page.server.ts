@@ -1,7 +1,7 @@
 import { supabase } from '$lib/supabase-server';
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
-import bcrypt from 'bcrypt';
+import { hashPassword } from '$lib/auth';
 
 export const actions: Actions = {
     default: async ({ request, cookies }) => {
@@ -79,7 +79,7 @@ export const actions: Actions = {
             
             // Hash the password
             const saltRounds = 10;
-            const hashedPassword = await bcrypt.hash(password, saltRounds);
+            const hashedPassword = hashPassword(password);
             
             // Insert new user
             const { error } = await supabase
