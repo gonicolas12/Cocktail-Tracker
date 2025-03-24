@@ -15,4 +15,25 @@ declare global {
 	}
 }
 
+/// <reference types="svelte" />
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+    SUPABASE_URL: string;
+    SUPABASE_ANON_KEY: string;
+}
+
+interface ImportMeta {
+    readonly env: ImportMetaEnv;
+}
+
+declare namespace App {
+    interface Locals {
+        user: User | null;
+    }
+    interface PageData {
+        user: User | null;
+    }
+}
+
 export {};
