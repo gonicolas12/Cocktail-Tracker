@@ -1,5 +1,8 @@
-<script>
+<script lang="ts">
     import "$lib/styles.css";
+    import type { User } from '$lib/types/user';
+    
+    export let data: { user?: User | null };
 </script>
 
 <div class="layout">
@@ -9,6 +12,20 @@
             <nav>
                 <a href="/">Accueil</a>
                 <a href="/create">Créer un cocktail</a>
+                
+                {#if data.user}
+                    <span class="user-greeting">
+                        Bonjour, {data.user.username}
+                    </span>
+                    <form method="POST" action="/logout">
+                        <button type="submit" class="logout-btn">
+                            Déconnexion
+                        </button>
+                    </form>
+                {:else}
+                    <a href="/login">Connexion</a>
+                    <a href="/register">Inscription</a>
+                {/if}
             </nav>
         </div>
     </header>
@@ -45,19 +62,32 @@
     
     nav {
         display: flex;
+        align-items: center;
         gap: 20px;
     }
     
-    nav a {
+    nav a, .logout-btn {
         color: white;
         text-decoration: none;
         padding: 5px 10px;
         border-radius: 4px;
         transition: background-color 0.2s;
+        background: none;
+        border: none;
+        cursor: pointer;
     }
     
-    nav a:hover {
+    nav a:hover, .logout-btn:hover {
         background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .user-greeting {
+        margin-right: 15px;
+        font-weight: bold;
+    }
+    
+    .logout-btn {
+        font-size: inherit;
     }
     
     main {
