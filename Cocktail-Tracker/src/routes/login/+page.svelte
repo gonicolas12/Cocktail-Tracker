@@ -1,10 +1,21 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+    import { afterUpdate } from 'svelte';
     
     export let form: {
         error?: string;
         email?: string;
+        success?: boolean;
+        loginCompleted?: boolean;
     } | undefined = undefined;
+    
+    // Vérifier la connexion à chaque mise à jour
+    afterUpdate(() => {
+        if (form?.loginCompleted) {
+            // Redirection directe si la connexion est réussie
+            window.location.href = '/';
+        }
+    });
 </script>
 
 <div class="login-container">
