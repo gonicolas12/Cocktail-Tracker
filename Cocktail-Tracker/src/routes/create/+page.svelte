@@ -1,8 +1,12 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+    import { goto } from '$app/navigation';
     
     export let form: {
         error?: string;
+        message?: string;
+        success?: boolean;
+        redirect?: string;
         title?: string;
         ingredients?: string;
     } | undefined = undefined;
@@ -14,6 +18,20 @@
     {#if form?.error}
         <div class="message error">
             <p>{form.error}</p>
+        </div>
+    {/if}
+    
+    {#if form?.success}
+        <div class="message success">
+            <p>{form.message || "Cocktail Posté !"}</p>
+            <script>
+                // Redirection après un délai si un chemin de redirection est fourni
+                if ({form.redirect}) {
+                    setTimeout(() => {
+                        window.location.href = {form.redirect};
+                    }, 1500);
+                }
+            </script>
         </div>
     {/if}
     
@@ -141,5 +159,11 @@
         background-color: #fff1f0;
         border-left: 4px solid #ff4d4f;
         color: #cf1322;
+    }
+    
+    .success {
+        background-color: #f6ffed;
+        border-left: 4px solid #52c41a;
+        color: #52c41a;
     }
 </style>

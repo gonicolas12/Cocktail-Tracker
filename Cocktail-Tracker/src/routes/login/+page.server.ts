@@ -1,7 +1,7 @@
 import { supabase } from '$lib/supabase-server';
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
-import { comparePassword } from '$lib/auth';
+import { hashPassword } from '$lib/auth';
 
 export const actions: Actions = {
     default: async ({ request, cookies }) => {
@@ -18,52 +18,74 @@ export const actions: Actions = {
         }
         
         try {
-            // Find user by email or username
-            const { data: user, error: findError } = await supabase
+            // Approche alternative: deux requêtes distinctes pour éviter les problèmes de syntaxe
+            let userData;
+            
+            // D'abord, essayer de trouver par email
+            const { data: userByEmail, error: emailError } = await supabase
                 .from('users')
                 .select('*')
-                .or(`email.eq.${emailOrUsername},username.eq.${emailOrUsername}`)
-                .single();
-            
-            // Check for errors or user not found
-            if (findError) {
-                if (findError.code === 'PGRST116') {
-                    // User not found
-                    return fail(400, { 
-                        error: 'Identifiants invalides',
-                        email: emailOrUsername
-                    });
-                }
-                throw findError;
+                .eq('email', emailOrUsername)
+                .maybeSingle();
+                
+            if (emailError && emailError.code !== 'PGRST116') {
+                console.error('Erreur recherche par email:', emailError);
+                throw emailError;
             }
             
-            // Verify password
-            const isPasswordCorrect = comparePassword(password, user.password);
+            if (userByEmail) {
+                userData = userByEmail;
+            } else {
+                // Sinon, essayer de trouver par username
+                const { data: userByUsername, error: usernameError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('username', emailOrUsername)
+                    .maybeSingle();
+                    
+                if (usernameError && usernameError.code !== 'PGRST116') {
+                    console.error('Erreur recherche par username:', usernameError);
+                    throw usernameError;
+                }
+                
+                userData = userByUsername;
+            }
             
-            if (!isPasswordCorrect) {
+            // Si aucun utilisateur n'est trouvé
+            if (!userData) {
                 return fail(400, { 
                     error: 'Identifiants invalides',
                     email: emailOrUsername
                 });
             }
             
-            // Create a session token (you might want to implement a more robust session management)
+            // Vérifier le mot de passe (approche simplifiée)
+            const hashedInputPassword = hashPassword(password);
+            if (hashedInputPassword !== userData.password) {
+                return fail(400, { 
+                    error: 'Identifiants invalides',
+                    email: emailOrUsername
+                });
+            }
+            
+            // Créer un token de session
             const sessionToken = crypto.randomUUID();
             
-            // Store session in Supabase or your preferred session management
+            // Stocker la session dans Supabase
             const { error: sessionError } = await supabase
                 .from('sessions')
                 .insert({
-                    user_id: user.id,
+                    user_id: userData.id,
                     token: sessionToken,
                     expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
                 });
             
             if (sessionError) {
+                console.error('Erreur de création de session:', sessionError);
                 throw sessionError;
             }
             
-            // Set session cookie
+            // Définir le cookie de session
             cookies.set('session', sessionToken, {
                 path: '/',
                 httpOnly: true,
@@ -72,13 +94,13 @@ export const actions: Actions = {
                 maxAge: 24 * 60 * 60 // 24 hours
             });
             
-            // Redirect to home page
+            // Rediriger vers la page d'accueil
             throw redirect(303, '/');
         } catch (e) {
-            console.error('Login exception:', e);
+            console.error('Exception de connexion:', e);
             
             if (e instanceof Response) {
-                throw e; // It's a redirect
+                throw e; // C'est une redirection
             }
             
             return fail(500, { 

@@ -5,6 +5,8 @@ export type Cocktail = {
     likes: number;
     dislikes: number;
     created_at?: string;
+    created_by?: number;
+    user_username?: string;
 };
 
 export type CocktailFormData = {

@@ -99,8 +99,12 @@ export const actions: Actions = {
                 });
             }
             
-            // Redirect to login page
-            throw redirect(303, '/login');
+            // Renvoyer un succès au lieu d'une redirection immédiate
+            return {
+                success: true, 
+                message: 'Compte créé !', 
+                redirect: '/login'
+            };
         } catch (e) {
             console.error('Exception:', e);
             

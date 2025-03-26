@@ -1,9 +1,13 @@
 import { supabase } from '$lib/supabase-server';
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
+import { protectRoute } from '$lib/auth-protect';
+
+// Protection de la route
+export const load = protectRoute;
 
 export const actions: Actions = {
-    default: async ({ request }: { request: Request }) => {
+    default: async ({ request, locals }) => {
         const formData = await request.formData();
         const title = formData.get('title') as string;
         const ingredientsStr = formData.get('ingredients') as string;
@@ -31,6 +35,10 @@ export const actions: Actions = {
         }
         
         try {
+            // Récupérer l'utilisateur actuel
+            const userId = locals.user?.id;
+            
+            // Insertion du cocktail avec l'ID de l'utilisateur
             const { error } = await supabase
                 .from('cocktails')
                 .insert({
@@ -38,7 +46,9 @@ export const actions: Actions = {
                     ingredients,
                     likes: 0,
                     dislikes: 0,
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    created_by: userId,
+                    user_username: locals.user?.username || 'User'
                 });
                 
             if (error) {
@@ -49,8 +59,12 @@ export const actions: Actions = {
                 });
             }
             
-            // Redirection vers la page d'accueil
-            throw redirect(303, '/');
+            // Redirection vers la page d'accueil avec un message de succès
+            return {
+                success: true,
+                message: 'Cocktail Posté !',
+                redirect: '/'
+            };
         } catch (e) {
             console.error('Exception:', e);
             

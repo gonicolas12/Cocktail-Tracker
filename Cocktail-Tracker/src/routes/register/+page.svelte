@@ -1,9 +1,13 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+    import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     
     export let form: {
         error?: string;
+        message?: string;
+        success?: boolean;
+        redirect?: string;
         username?: string;
         email?: string;
     } | undefined = undefined;
@@ -20,6 +24,16 @@
         passwordError = '';
         return true;
     }
+    
+    // Gérer la redirection après un succès
+    onMount(() => {
+        if (form?.success && form?.redirect) {
+            const redirectUrl = form.redirect;
+            setTimeout(() => {
+                goto(redirectUrl);
+            }, 3000); // Redirection après 3 secondes
+        }
+    });
 </script>
 
 <div class="register-container">
@@ -31,71 +45,79 @@
         </div>
     {/if}
     
-    <form method="POST" use:enhance class="register-form">
-        <div class="form-group">
-            <label for="username">Pseudo</label>
-            <input 
-                type="text" 
-                id="username" 
-                name="username" 
-                value={form?.username || ''} 
-                placeholder="Votre pseudo"
-                required
-                minlength="3"
-                maxlength="50"
-            />
+    {#if form?.success}
+        <div class="message success">
+            <p>{form.message || "Compte créé !"}</p>
+            <p>Vous allez être redirigé vers la page de connexion dans quelques secondes...</p>
+            <a href="/login" class="login-now-btn">Se connecter maintenant</a>
         </div>
-        
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input 
-                type="email" 
-                id="email" 
-                name="email" 
-                value={form?.email || ''} 
-                placeholder="vous@exemple.com"
-                required
-            />
-        </div>
-        
-        <div class="form-group">
-            <label for="password">Mot de passe</label>
-            <input 
-                type="password" 
-                id="password" 
-                name="password" 
-                bind:value={password}
-                placeholder="Mot de passe"
-                required
-                minlength="8"
-            />
-        </div>
-        
-        <div class="form-group">
-            <label for="confirm-password">Confirmer le mot de passe</label>
-            <input 
-                type="password" 
-                id="confirm-password" 
-                bind:value={confirmPassword}
-                placeholder="Confirmez le mot de passe"
-                required
-                on:input={validatePasswords}
-            />
-            {#if passwordError}
-                <small class="error-text">{passwordError}</small>
-            {/if}
-        </div>
-        
-        <div class="form-actions">
-            <button type="submit" class="submit-btn" disabled={!!passwordError}>
-                Créer un compte
-            </button>
-        </div>
-        
-        <div class="login-link">
-            <p>Vous avez déjà un compte ? <a href="/login">Connectez-vous</a></p>
-        </div>
-    </form>
+    {:else}
+        <form method="POST" use:enhance class="register-form">
+            <div class="form-group">
+                <label for="username">Pseudo</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    value={form?.username || ''} 
+                    placeholder="Votre pseudo"
+                    required
+                    minlength="3"
+                    maxlength="50"
+                />
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    value={form?.email || ''} 
+                    placeholder="vous@exemple.com"
+                    required
+                />
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    bind:value={password}
+                    placeholder="Mot de passe"
+                    required
+                    minlength="8"
+                />
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm-password">Confirmer le mot de passe</label>
+                <input 
+                    type="password" 
+                    id="confirm-password" 
+                    bind:value={confirmPassword}
+                    placeholder="Confirmez le mot de passe"
+                    required
+                    on:input={validatePasswords}
+                />
+                {#if passwordError}
+                    <small class="error-text">{passwordError}</small>
+                {/if}
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="submit-btn" disabled={!!passwordError}>
+                    Créer un compte
+                </button>
+            </div>
+            
+            <div class="login-link">
+                <p>Vous avez déjà un compte ? <a href="/login">Connectez-vous</a></p>
+            </div>
+        </form>
+    {/if}
 </div>
 
 <style>
@@ -189,5 +211,31 @@
         background-color: #fff1f0;
         border-left: 4px solid #ff4d4f;
         color: #cf1322;
+    }
+    
+    .success {
+        background-color: #f6ffed;
+        border-left: 4px solid #52c41a;
+        color: #52c41a;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+    }
+    
+    .login-now-btn {
+        display: inline-block;
+        background-color: #4a90e2;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 4px;
+        text-decoration: none;
+        margin-top: 15px;
+        transition: background-color 0.2s;
+    }
+    
+    .login-now-btn:hover {
+        background-color: #3a7bc8;
+        text-decoration: none;
     }
 </style>
