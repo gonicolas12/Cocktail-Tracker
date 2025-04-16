@@ -4,9 +4,6 @@
     
     export let form;
     
-    // Récupérer l'url de redirection des paramètres
-    $: redirectTo = $page.url.searchParams.get('redirect') || '/';
-    
     // Variables de formulaire
     let username = form?.username || '';
     let email = form?.email || '';
@@ -18,17 +15,19 @@
     $: passwordsMatch = password === passwordConfirm;
     $: passwordLongEnough = password.length >= 6;
     $: formValid = username && email && password && passwordConfirm && passwordsMatch && passwordLongEnough;
+    $: redirectTo = $page.url.searchParams.get('redirect') || '/';
     
-    // Gérer la soumission du formulaire avec une animation de chargement
+    // Fonction de soumission modifiée pour ne pas interférer avec les redirections
     function handleSubmit() {
         if (!formValid) return;
         
         loading = true;
-        return async ({ result }: { result: { type: string } }) => {
+        
+        // Version simplifiée qui permet à la redirection de fonctionner
+        return ({ update }: { update: () => void }) => {
             loading = false;
-            if (result.type === 'redirect') {
-                // La redirection sera gérée automatiquement par SvelteKit
-            }
+            update();
+            // Ne pas faire d'autres traitements ici qui pourraient bloquer la redirection
         };
     }
 </script>
@@ -49,7 +48,6 @@
         
         <form method="POST" use:enhance={handleSubmit}>
             <!-- Champ caché pour la redirection -->
-            <input type="hidden" name="redirect" value={redirectTo} />
             
             <div class="form-group">
                 <label for="username">Nom d'utilisateur</label>

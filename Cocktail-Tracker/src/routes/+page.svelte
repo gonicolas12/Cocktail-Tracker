@@ -1,4 +1,3 @@
-<!-- routes/+page.svelte -->
 <script lang="ts">
     import { page } from '$app/stores';
     import SearchBar from '$lib/components/SearchBar.svelte';
@@ -16,14 +15,16 @@
     
     // Options de tri
     const sortOptions = [
+        { label: 'Les plus populaires', value: 'likes|desc' },
         { label: 'Les plus récents', value: 'created_at|desc' },
         { label: 'Les plus anciens', value: 'created_at|asc' },
-        { label: 'Les plus populaires', value: 'likes|desc' },
         { label: 'Les moins populaires', value: 'likes|asc' }
     ];
     
-    $: selectedSort = `${filters?.sortBy || 'created_at'}|${filters?.direction || 'desc'}`;
-    
+    $: selectedSort = filters?.sortBy && filters?.direction 
+        ? `${filters.sortBy}|${filters.direction}` 
+        : 'likes|desc';
+            
     // Fonction de recherche
     function handleSearch(event: CustomEvent<string>): void {
         const term = event.detail || '';
@@ -103,7 +104,7 @@
             {#each cocktails as cocktail}
                 <CocktailCard 
                     {cocktail}
-                    userVote={userVotes.find(v => v.cocktail_id === cocktail.id)?.vote_type}
+                    userVote={userVotes.find(v => v.cocktail_id === cocktail.id)?.vote_type || null}
                     user={$page.data.user}
                 />
             {/each}

@@ -15,6 +15,7 @@
     let mobileMenuOpen = false;
     let searchOpen = false;
     let searchTerm = '';
+    let menuOpen = false;
     
     // Gérer la recherche dans le header
     function handleSearch(event: CustomEvent<string>): void {
@@ -27,10 +28,44 @@
     }
     
     // Gérer la déconnexion
-    async function handleLogout(): Promise<void> {
-        await goto('/logout');
+    async function handleLogout() {
+        menuOpen = false; // Fermer le menu
+        
+        // Au lieu d'utiliser fetch avec une requête JSON, 
+        // créons un formulaire et le soumettons
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/logout';
+        form.style.display = 'none';
+        document.body.appendChild(form);
+        
+        form.submit();
+    }
+    
+    // Fonction pour basculer l'état du menu
+    function toggleMenu() {
+        menuOpen = !menuOpen;
+    }
+    
+    // Fonction pour gérer l'événement clavier
+    function handleKeyDown(event: KeyboardEvent) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            toggleMenu();
+        }
+    }
+    
+    // Fonction pour fermer le menu quand on clique ailleurs sur la page
+    function handleClickOutside(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        const userMenu = document.querySelector('.user-menu');
+        
+        if (userMenu && !userMenu.contains(target)) {
+            menuOpen = false;
+        }
     }
 </script>
+
+<svelte:window on:click={handleClickOutside} />
 
 <div class="app-container">
     <header class="main-header">
@@ -79,11 +114,22 @@
                             <a href="/create" class:active={pathname === '/create'}>Créer</a>
                         </li>
                         <li class="user-menu">
-                            <span class="username">{user.username}</span>
-                            <div class="dropdown-menu">
-                                <a href="/profile">Mon profil</a>
-                                <button on:click={handleLogout} class="logout-btn">Déconnexion</button>
-                            </div>
+                            <span 
+                                class="username" 
+                                on:click={toggleMenu} 
+                                on:keydown={handleKeyDown}
+                                role="button" 
+                                tabindex="0"
+                            >
+                                {user.username}
+                            </span>
+                            
+                            {#if menuOpen}
+                                <div class="dropdown-menu">
+                                    <a href="/profile">Mon profil</a>
+                                    <button on:click={handleLogout} class="logout-btn">Déconnexion</button>
+                                </div>
+                            {/if}
                         </li>
                     {:else}
                         <li>
@@ -262,6 +308,7 @@
         display: flex;
         align-items: center;
         gap: 5px;
+        font-weight: bold;
     }
     
     .username::after {
@@ -277,13 +324,24 @@
         border-radius: 4px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         min-width: 150px;
-        display: none;
         z-index: 10;
         margin-top: 10px;
     }
     
     .user-menu:hover .dropdown-menu {
         display: block;
+    }
+    
+    .dropdown-menu a, .dropdown-menu button {
+        display: block;
+        padding: 10px 15px;
+        color: #333;
+        text-decoration: none;
+        text-align: left;
+        width: 100%;
+        background: none;
+        border: none;
+        cursor: pointer;
     }
     
     .dropdown-menu a, .dropdown-menu button {

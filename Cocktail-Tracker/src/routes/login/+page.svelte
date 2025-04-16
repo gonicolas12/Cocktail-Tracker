@@ -6,6 +6,7 @@
     
     // Récupérer l'url de redirection des paramètres
     $: redirectTo = $page.url.searchParams.get('redirect') || '/';
+    $: registered = $page.url.searchParams.get('registered') === 'true';
     
     let email = form?.email || '';
     let password = '';
@@ -14,11 +15,9 @@
     // Gérer la soumission du formulaire avec une animation de chargement
     function handleSubmit() {
         loading = true;
-        return async ({ result }: { result: { type: string } }) => {
+        return ({ update }: { update: () => void }) => {
             loading = false;
-            if (result.type === 'redirect') {
-                // La redirection sera gérée automatiquement par SvelteKit
-            }
+            update();
         };
     }
 </script>
@@ -30,6 +29,12 @@
 <div class="auth-container">
     <div class="auth-card">
         <h1>Connexion</h1>
+        
+        {#if registered}
+            <div class="message success">
+                <p>Compte créé avec succès ! Vous pouvez maintenant vous connecter.</p>
+            </div>
+        {/if}
         
         {#if form?.error}
             <div class="message error">

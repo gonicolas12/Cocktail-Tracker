@@ -1,17 +1,18 @@
 import { supabase } from '$lib/supabase-server';
 import type { RequestEvent } from '@sveltejs/kit';
 
+// Définir une interface pour les votes utilisateur
 interface UserVote {
     cocktail_id: number;
     vote_type: 'like' | 'dislike';
 }
 
-export async function load({ url }: RequestEvent) {
+export async function load({ url, locals }: RequestEvent) {
     try {
         // Récupérer les paramètres de recherche et de tri
         const searchTerm = url.searchParams.get('search') || '';
-        const sortBy = url.searchParams.get('sort') || 'created_at';
-        const direction = url.searchParams.get('dir') || 'desc';
+        const sortBy = url.searchParams.get('sort') || 'likes'; // Par défaut: likes
+        const direction = url.searchParams.get('dir') || 'desc'; // Par défaut: descendant
         
         // Construire la requête Supabase
         let query = supabase
@@ -38,14 +39,13 @@ export async function load({ url }: RequestEvent) {
             };
         }
         
-        // Si l'utilisateur est connecté, récupérer ses votes
+        // Récupérer les votes de l'utilisateur si connecté
         let userVotes: UserVote[] = [];
-        if (url.searchParams.get('userId')) {
-            const userId = url.searchParams.get('userId');
+        if (locals.user) {
             const { data: votes, error: votesError } = await supabase
                 .from('cocktail_votes')
                 .select('cocktail_id, vote_type')
-                .eq('user_id', userId);
+                .eq('user_id', locals.user.id);
                 
             if (!votesError && votes) {
                 userVotes = votes as UserVote[];
@@ -64,7 +64,7 @@ export async function load({ url }: RequestEvent) {
             cocktails: [],
             userVotes: [] as UserVote[],
             error: e instanceof Error ? e.message : 'Erreur inconnue',
-            filters: { searchTerm: '', sortBy: 'created_at', direction: 'desc' }
+            filters: { searchTerm: '', sortBy: 'likes', direction: 'desc' }
         };
     }
 }

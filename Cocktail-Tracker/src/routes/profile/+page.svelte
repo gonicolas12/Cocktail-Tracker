@@ -6,48 +6,16 @@
     export let data;
     export let form;
     
+    // Debug
+    console.log("Données du profil:", data);
+    
     // Récupérer les données du serveur
     $: user = data.user;
     
-    // Vérifier la structure des données et les transformer si nécessaire
-    $: userCocktails = Array.isArray(data.userCocktails) 
-        ? data.userCocktails.map((c: any) => ({
-            id: c.id,
-            title: c.title,
-            ingredients: c.ingredients || [],
-            likes: c.likes || 0,
-            dislikes: c.dislikes || 0,
-            created_at: c.created_at,
-            created_by: c.created_by,
-            user_username: c.user_username
-          })) as Cocktail[]
-        : [];
-    
-    $: likedCocktails = Array.isArray(data.likedCocktails) 
-        ? data.likedCocktails.map((c: any) => ({
-            id: c.id,
-            title: c.title,
-            ingredients: c.ingredients || [],
-            likes: c.likes || 0,
-            dislikes: c.dislikes || 0,
-            created_at: c.created_at,
-            created_by: c.created_by,
-            user_username: c.user_username
-          })) as Cocktail[]
-        : [];
-    
-    $: dislikedCocktails = Array.isArray(data.dislikedCocktails) 
-        ? data.dislikedCocktails.map((c: any) => ({
-            id: c.id,
-            title: c.title,
-            ingredients: c.ingredients || [],
-            likes: c.likes || 0,
-            dislikes: c.dislikes || 0,
-            created_at: c.created_at,
-            created_by: c.created_by,
-            user_username: c.user_username
-          })) as Cocktail[]
-        : [];
+    // Transformation plus simple des données
+    $: userCocktails = data.userCocktails || [];
+    $: likedCocktails = data.likedCocktails || [];
+    $: dislikedCocktails = data.dislikedCocktails || [];
     
     // Variable pour l'édition du profil
     let editMode = false;
@@ -69,7 +37,7 @@
         }).format(date);
     }
     
-    // Fonction simplifiée pour utiliser enhance
+    // Gérer la soumission du formulaire
     function handleSubmit() {
         if (username.trim() === '') return;
         

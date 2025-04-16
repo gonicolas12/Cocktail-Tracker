@@ -1,5 +1,5 @@
 import { redirectIfAuthenticated } from '$lib/auth-protect';
-import { registerUser, loginUser } from '$lib/auth';
+import { registerUser } from '$lib/auth'; // Supprimez loginUser de l'import
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
 
@@ -7,7 +7,7 @@ import type { Actions } from '@sveltejs/kit';
 export const load = redirectIfAuthenticated;
 
 export const actions: Actions = {
-    default: async ({ request, cookies, url }) => {
+    default: async ({ request, url }) => {
         const formData = await request.formData();
         const username = formData.get('username') as string;
         const email = formData.get('email') as string;
@@ -50,19 +50,8 @@ export const actions: Actions = {
             });
         }
         
-        // Si l'enregistrement réussit, connecter l'utilisateur automatiquement
-        const loginResult = await loginUser({ email, password }, cookies);
-        
-        if (!loginResult.success) {
-            return fail(500, { 
-                error: 'Compte créé mais connexion automatique échouée. Veuillez vous connecter manuellement.',
-                username,
-                email
-            });
-        }
-        
-        // Rediriger vers la page demandée ou l'accueil
-        const redirectTo = url.searchParams.get('redirect') || '/';
-        throw redirect(302, redirectTo);
+        // Au lieu de connecter automatiquement, rediriger vers la page de connexion
+        // avec un message de succès
+        throw redirect(302, '/login?registered=true');
     }
 };

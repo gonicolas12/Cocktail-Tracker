@@ -1,4 +1,3 @@
-// routes/profile/+page.server.ts
 import { supabase } from '$lib/supabase-server';
 import { protectRoute } from '$lib/auth-protect';
 import type { Actions } from '@sveltejs/kit';
@@ -13,6 +12,8 @@ export const load = async (event) => {
         return data; // La redirection sera gérée par protectRoute
     }
     
+    console.log("Utilisateur connecté:", data.user); // Debug
+    
     // Récupérer les cocktails de l'utilisateur
     const { data: userCocktails, error: cocktailsError } = await supabase
         .from('cocktails')
@@ -20,21 +21,19 @@ export const load = async (event) => {
         .eq('created_by', data.user.id)
         .order('created_at', { ascending: false });
         
+    console.log("Cocktails de l'utilisateur:", { data: userCocktails, error: cocktailsError }); // Debug
+        
     // Récupérer les votes de l'utilisateur
     const { data: userVotes, error: votesError } = await supabase
         .from('cocktail_votes')
         .select(`
             vote_type,
             cocktail_id,
-            cocktails (
-                id,
-                title,
-                ingredients,
-                likes,
-                dislikes
-            )
+            cocktails (*)
         `)
         .eq('user_id', data.user.id);
+        
+    console.log("Votes de l'utilisateur:", { data: userVotes, error: votesError }); // Debug
         
     // Filtrer les votes par type
     const likedCocktails = userVotes
