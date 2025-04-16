@@ -141,6 +141,7 @@
         .search-sort-container {
             flex-direction: row;
             align-items: center;
+            margin-left: 250px;
         }
     }
     

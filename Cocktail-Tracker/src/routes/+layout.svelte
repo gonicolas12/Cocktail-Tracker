@@ -99,11 +99,6 @@
                     {/if}
                 </button>
             </div>
-            
-            <div class="desktop-search">
-                <SearchBar on:search={handleSearch} />
-            </div>
-            
             <nav class="desktop-nav">
                 <ul class="nav-links">
                     <li>
@@ -395,15 +390,9 @@
         opacity: 0.8;
     }
     
-    .desktop-search {
-        flex: 1;
-        max-width: 400px;
-        margin: 0 20px;
-    }
-    
     /* Styles responsive */
     @media (max-width: 768px) {
-        .desktop-nav, .desktop-search {
+        .desktop-nav {
             display: none;
         }
         

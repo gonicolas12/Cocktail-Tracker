@@ -1,5 +1,5 @@
 import { supabase } from '$lib/supabase-server';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
 import { isResourceOwner } from '$lib/auth-protect';
 
@@ -111,7 +111,7 @@ export const actions: Actions = {
     },
     
     // Action pour supprimer un cocktail
-    deleteRecipe: async ({ params, locals }) => {
+    deleteRecipe: async ({ params, locals, cookies }) => {
         if (!locals.user) {
             return { success: false, error: 'Vous devez être connecté pour supprimer un cocktail' };
         }
@@ -159,10 +159,10 @@ export const actions: Actions = {
                 };
             }
             
-            return { 
-                success: true, 
-                redirect: '/',
-                message: 'Cocktail supprimé avec succès!'
+            // Au lieu d'utiliser redirect, retournez un objet avec une redirection
+            return {
+                success: true,
+                redirect: true
             };
         } catch (e) {
             console.error('Exception:', e);
