@@ -1,7 +1,13 @@
 import { supabase } from '$lib/supabase-server';
 import { protectRoute } from '$lib/auth-protect';
-import type { Actions } from '@sveltejs/kit';
 import { fail } from '@sveltejs/kit';
+import type { Actions } from '@sveltejs/kit';
+import crypto from 'crypto';
+
+// Fonction pour hacher le mot de passe avec SHA-256 (comme votre système existant)
+function hashPassword(password: string): string {
+    return crypto.createHash('sha256').update(password).digest('hex');
+}
 
 // Protection de la route - nécessite d'être connecté
 export const load = async (event) => {
@@ -131,6 +137,92 @@ export const actions: Actions = {
                 success: false, 
                 error: e instanceof Error ? e.message : 'Erreur inconnue',
                 username: locals.user.username
+            });
+        }
+    },
+     // Nouvelle action pour changer le mot de passe
+     changePassword: async ({ request, locals }) => {
+        if (!locals.user) {
+            return fail(401, { passwordSuccess: false, passwordError: 'Non autorisé' });
+        }
+        
+        const formData = await request.formData();
+        const currentPassword = formData.get('currentPassword') as string;
+        const newPassword = formData.get('newPassword') as string;
+        const confirmPassword = formData.get('confirmPassword') as string;
+        
+        // Validation de base
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return fail(400, { 
+                passwordSuccess: false, 
+                passwordError: 'Tous les champs sont requis'
+            });
+        }
+        
+        if (newPassword !== confirmPassword) {
+            return fail(400, { 
+                passwordSuccess: false, 
+                passwordError: 'Les mots de passe ne correspondent pas'
+            });
+        }
+        
+        if (newPassword.length < 6) {
+            return fail(400, { 
+                passwordSuccess: false, 
+                passwordError: 'Le nouveau mot de passe doit contenir au moins 6 caractères'
+            });
+        }
+        
+        try {
+            // Récupérer le mot de passe actuel de l'utilisateur
+            const { data: user, error: userError } = await supabase
+                .from('users')
+                .select('password')
+                .eq('id', locals.user.id)
+                .single();
+                
+            if (userError || !user) {
+                return fail(500, { 
+                    passwordSuccess: false, 
+                    passwordError: 'Erreur lors de la récupération du profil'
+                });
+            }
+            
+            // Vérifier que le mot de passe actuel est correct
+            const hashedCurrentPassword = hashPassword(currentPassword);
+            if (hashedCurrentPassword !== user.password) {
+                return fail(400, { 
+                    passwordSuccess: false, 
+                    passwordError: 'Mot de passe actuel incorrect'
+                });
+            }
+            
+            // Hasher le nouveau mot de passe
+            const hashedNewPassword = hashPassword(newPassword);
+            
+            // Mettre à jour le mot de passe
+            const { error: updateError } = await supabase
+                .from('users')
+                .update({ password: hashedNewPassword })
+                .eq('id', locals.user.id);
+                
+            if (updateError) {
+                return fail(500, { 
+                    passwordSuccess: false, 
+                    passwordError: `Erreur lors de la mise à jour: ${updateError.message}`
+                });
+            }
+            
+            return { 
+                passwordSuccess: true, 
+                passwordMessage: 'Mot de passe mis à jour avec succès'
+            };
+        } catch (e) {
+            console.error('Exception lors du changement de mot de passe:', e);
+            
+            return fail(500, { 
+                passwordSuccess: false, 
+                passwordError: e instanceof Error ? e.message : 'Erreur inconnue'
             });
         }
     }
