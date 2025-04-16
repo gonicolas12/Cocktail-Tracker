@@ -140,3 +140,130 @@
         {/if}
     </div>
 </div>
+
+<style>    
+    .detail-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+    
+    .comments-section {
+        margin-top: 40px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+    }
+    
+    /* Titre de la section commentaires */
+    .comments-section h2 {
+        margin-top: 0;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 20px;
+        color: #333;
+    }
+    
+    .comment {
+        padding: 15px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        background-color: #f9f9f9;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .comment:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* En-tête du commentaire avec nom et date */
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    /* Nom d'utilisateur */
+    .username {
+        font-weight: bold;
+        color: #4a90e2;
+    }
+    
+    /* Date du commentaire */
+    .date {
+        font-size: 0.85rem;
+        color: #999;
+    }
+    
+    /* Contenu du commentaire */
+    .comment-content {
+        margin: 0;
+        line-height: 1.6;
+        color: #444;
+    }
+    
+    /* Formulaire d'ajout de commentaire */
+    form {
+        margin-bottom: 30px;
+        background-color: #f5f7fa;
+        padding: 20px;
+        border-radius: 8px;
+    }
+    
+    textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        resize: vertical;
+        background-color: white;
+    }
+    
+    /* Message quand il n'y a pas de commentaires */
+    .no-comments {
+        text-align: center;
+        padding: 30px 0;
+        color: #777;
+        font-style: italic;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+    
+    /* Amélioration du bouton de commentaire */
+    .comment-btn {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        margin-top: 10px;
+    }
+    
+    .comment-btn:hover {
+        background-color: #3a7bc8;
+    }
+    
+    /* Notification pour la connexion */
+    .login-prompt {
+        background-color: #f5f7fa;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 30px;
+        border-left: 4px solid #4a90e2;
+    }
+</style>
