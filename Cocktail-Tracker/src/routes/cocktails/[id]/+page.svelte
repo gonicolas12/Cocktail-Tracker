@@ -120,7 +120,6 @@
                     method="POST" 
                     action="?/deleteRecipe" 
                     use:enhance={({ formData, formElement, action, cancel, submitter }) => {
-                        // Suppression de 'form' qui n'existe pas dans les paramètres
                         return async ({ result }) => {
                             if (result.type === 'success' && result.data?.redirect) {
                                 // Redirection côté client après une suppression réussie
@@ -141,7 +140,6 @@
     <div class="comments-section">
         <h2>Commentaires ({comments.length})</h2>
 
-        <!-- Reste du code pour les commentaires inchangé -->
         {#if $page.data.user}
             <form
                 method="POST"
