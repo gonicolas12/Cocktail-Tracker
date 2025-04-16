@@ -1,5 +1,5 @@
 import { redirectIfAuthenticated } from '$lib/auth-protect';
-import { registerUser } from '$lib/auth'; // Supprimez loginUser de l'import
+import { registerUser } from '$lib/auth';
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
 

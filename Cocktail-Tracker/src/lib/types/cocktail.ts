@@ -10,7 +10,6 @@ export interface Cocktail {
     user_username?: string;
 }
 
-// Ajoutez une interface pour les commentaires
 export interface Comment {
     id: number;
     content: string;
@@ -20,3 +19,8 @@ export interface Comment {
         username: string;
     } | { username: string }[]; // Adapté à différentes structures possibles
 }
+
+export type CocktailFormData = {
+    title: string;
+    ingredients: string; // Les ingredients seront entrés comme une chaîne séparée par des virgules
+};

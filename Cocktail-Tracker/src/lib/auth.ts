@@ -5,7 +5,7 @@ import crypto from 'crypto';
 
 const SESSION_EXPIRY_DAYS = 30;
 
-// Fonction pour hacher le mot de passe avec SHA-256 (comme votre système existant)
+// Fonction pour hacher le mot de passe avec SHA-256
 function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex');
 }
