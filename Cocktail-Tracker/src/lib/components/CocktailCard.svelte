@@ -78,10 +78,6 @@
             on:voteUpdate={handleVoteUpdate}
         />
     </div>
-    
-    {#if showDetails}
-        <a href="/" class="back-link">Retour à l'accueil</a>
-    {/if}
 </div>
 
 <style>
@@ -141,16 +137,5 @@
         max-width: 800px;
         margin: 0 auto;
         padding: 30px;
-    }
-    
-    .back-link {
-        display: inline-block;
-        margin-top: 20px;
-        color: #4a90e2;
-        text-decoration: none;
-    }
-    
-    .back-link:hover {
-        text-decoration: underline;
     }
 </style>
