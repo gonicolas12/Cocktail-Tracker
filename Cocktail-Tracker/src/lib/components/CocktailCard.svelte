@@ -1,222 +1,156 @@
 <script lang="ts">
+    import LikeDislikeButtons from './LikeDislikeButtons.svelte';
+    import { goto } from '$app/navigation';
     import type { Cocktail } from '$lib/types/cocktail';
-    import { page } from '$app/stores';
-    import { onMount } from 'svelte';
-    import { supabase } from '$lib/supabase'; // Import du client Supabase
+    import type { User } from '$lib/types/user';
     
     export let cocktail: Cocktail;
+    export let userVote: 'like' | 'dislike' | null = null;
+    export let user: User | null = null;
+    export let showDetails = false;
     
-    // État local pour les compteurs de likes/dislikes
-    let localLikes = cocktail.likes || 0;
-    let localDislikes = cocktail.dislikes || 0;
-    let isLoading = false;
-    let errorMessage = '';
-    let userVote: 'like' | 'dislike' | null = null;
-    
-    // Vérifier si l'utilisateur a déjà voté pour ce cocktail
-    onMount(async () => {
-        if ($page.data.user) {
-            try {
-                const { data } = await supabase
-                    .from('cocktail_votes')
-                    .select('vote_type')
-                    .eq('user_id', $page.data.user.id)
-                    .eq('cocktail_id', cocktail.id)
-                    .maybeSingle();
-                
-                if (data) {
-                    userVote = data.vote_type as 'like' | 'dislike';
-                }
-            } catch (error) {
-                console.error('Erreur lors de la vérification du vote de l\'utilisateur:', error);
-            }
-        }
-    });
-    
-    // Fonction pour voter (like ou dislike)
-    async function vote(type: 'like' | 'dislike') {
-        // Vérifier si l'utilisateur est connecté
-        if (!$page.data.user) {
-            errorMessage = 'Vous devez être connecté pour voter';
-            setTimeout(() => errorMessage = '', 3000);
-            return;
-        }
+    // Formatter la date
+    function formatDate(dateString: string | undefined): string {
+        if (!dateString) return '';
         
-        try {
-            isLoading = true;
-            
-            const response = await fetch(`/api/cocktails/${cocktail.id}/vote`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ voteType: type })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                localLikes = result.likes;
-                localDislikes = result.dislikes;
-                userVote = result.userVote;
-            } else {
-                errorMessage = result.message || 'Erreur lors du vote';
-                setTimeout(() => errorMessage = '', 3000);
-            }
-        } catch (error) {
-            console.error('Erreur lors du vote:', error);
-            errorMessage = 'Erreur de connexion';
-            setTimeout(() => errorMessage = '', 3000);
-        } finally {
-            isLoading = false;
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('fr-FR', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+        }).format(date);
+    }
+    
+    // Naviguer vers la page détaillée du cocktail
+    function goToDetail(): void {
+        goto(`/cocktails/${cocktail.id}`);
+    }
+    
+    // Gérer les keydown events pour l'accessibilité
+    function handleKeyDown(event: KeyboardEvent): void {
+        if (event.key === 'Enter' || event.key === ' ') {
+            goToDetail();
         }
+    }
+    
+    // Gérer les mises à jour de likes/dislikes
+    function handleVoteUpdate(event: CustomEvent<{likes: number, dislikes: number, userVote: 'like' | 'dislike' | null}>): void {
+        cocktail.likes = event.detail.likes;
+        cocktail.dislikes = event.detail.dislikes;
+        userVote = event.detail.userVote;
     }
 </script>
 
-<div class="card">
-    <div class="header">
+<div class="cocktail-card" class:expanded={showDetails}>
+    <div class="card-header" 
+         on:click={goToDetail} 
+         on:keydown={handleKeyDown}
+         role="button" 
+         tabindex="0">
         <h2>{cocktail.title}</h2>
-        <span class="username">par {cocktail.user_username || 'User'}</span>
+        {#if cocktail.created_at}
+            <p class="date">Posté le {formatDate(cocktail.created_at)}</p>
+        {/if}
     </div>
     
-    <hr />
-    
-    <div class="ingredients">
+    <div class="card-body">
         <h3>Ingrédients:</h3>
-        <ul>
+        <ul class="ingredients-list">
             {#each cocktail.ingredients as ingredient}
                 <li>{ingredient}</li>
             {/each}
         </ul>
     </div>
     
-    {#if errorMessage}
-        <div class="error-message">
-            {errorMessage}
+    <div class="card-footer">
+        <div class="card-meta">
+            {#if cocktail.user_username}
+                <p class="author">Par {cocktail.user_username}</p>
+            {/if}
         </div>
-    {/if}
-    
-    <div class="actions">
-        <button 
-            class="like-btn" 
-            class:active={userVote === 'like'} 
-            on:click={() => vote('like')} 
-            disabled={isLoading}
-        >
-            <span class="icon">👍</span> {localLikes}
-        </button>
-        <button 
-            class="dislike-btn" 
-            class:active={userVote === 'dislike'} 
-            on:click={() => vote('dislike')} 
-            disabled={isLoading}
-        >
-            <span class="icon">👎</span> {localDislikes}
-        </button>
+        
+        <LikeDislikeButtons 
+            cocktailId={cocktail.id} 
+            likes={cocktail.likes} 
+            dislikes={cocktail.dislikes}
+            userVote={userVote}
+            isLoggedIn={!!user}
+            on:voteUpdate={handleVoteUpdate}
+        />
     </div>
+    
+    {#if showDetails}
+        <a href="/" class="back-link">Retour à l'accueil</a>
+    {/if}
 </div>
 
 <style>
-    .card {
-        background: white;
+    .cocktail-card {
+        background-color: white;
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         padding: 20px;
-        margin-bottom: 20px;
-        width: 450px;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
     
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
+    .cocktail-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
     
-    .header h2 {
-        margin: 0;
-        font-size: 24px;
+    .card-header {
+        cursor: pointer;
     }
     
-    .username {
-        font-size: 14px;
-        color: #666;
-        font-style: italic;
+    .card-header h2 {
+        margin: 0 0 10px;
+        color: #333;
     }
     
-    hr {
-        border: 0;
-        border-top: 1px solid #eee;
-        margin: 10px 0;
+    .date {
+        font-size: 0.8rem;
+        color: #777;
+        margin: 0 0 15px;
     }
     
-    .ingredients h3 {
-        margin-top: 0;
-        margin-bottom: 10px;
-    }
-    
-    .ingredients ul {
+    .ingredients-list {
         padding-left: 20px;
+        margin-bottom: 15px;
     }
     
-    .ingredients li {
+    .ingredients-list li {
         margin-bottom: 5px;
     }
     
-    .error-message {
-        background-color: #fff1f0;
-        border-left: 4px solid #ff4d4f;
-        color: #cf1322;
-        padding: 10px;
-        margin: 10px 0;
-        border-radius: 4px;
-        font-size: 14px;
-    }
-    
-    .actions {
+    .card-footer {
         display: flex;
-        gap: 10px;
-        margin-top: 15px;
-    }
-    
-    .like-btn, .dislike-btn {
-        padding: 8px 15px;
-        border: none;
-        border-radius: 4px;
-        display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 5px;
-        cursor: pointer;
-        transition: all 0.2s;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
     }
     
-    .like-btn {
-        background-color: #4caf50;
-        color: white;
-        opacity: 0.7;
+    .author {
+        font-style: italic;
+        color: #666;
+        margin: 0;
     }
     
-    .dislike-btn {
-        background-color: #f44336;
-        color: white;
-        opacity: 0.7;
+    .expanded {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 30px;
     }
     
-    .like-btn:hover, .dislike-btn:hover {
-        opacity: 0.9;
+    .back-link {
+        display: inline-block;
+        margin-top: 20px;
+        color: #4a90e2;
+        text-decoration: none;
     }
     
-    .like-btn.active, .dislike-btn.active {
-        opacity: 1;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-    }
-    
-    .like-btn:disabled, .dislike-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    
-    .icon {
-        font-size: 16px;
+    .back-link:hover {
+        text-decoration: underline;
     }
 </style>

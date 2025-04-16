@@ -1,17 +1,21 @@
-import { supabase } from '$lib/supabase-server';
+import { redirectIfAuthenticated } from '$lib/auth-protect';
+import { registerUser, loginUser } from '$lib/auth';
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
-import { hashPassword } from '$lib/auth';
+
+// Protection de la route - rediriger si déjà connecté
+export const load = redirectIfAuthenticated;
 
 export const actions: Actions = {
-    default: async ({ request, cookies }) => {
+    default: async ({ request, cookies, url }) => {
         const formData = await request.formData();
         const username = formData.get('username') as string;
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
+        const passwordConfirm = formData.get('passwordConfirm') as string;
         
         // Validation
-        if (!username || !email || !password) {
+        if (!username || !email || !password || !passwordConfirm) {
             return fail(400, { 
                 error: 'Tous les champs sont requis',
                 username,
@@ -19,104 +23,46 @@ export const actions: Actions = {
             });
         }
         
-        // Validate username length
-        if (username.length < 3 || username.length > 50) {
+        if (password !== passwordConfirm) {
             return fail(400, { 
-                error: 'Le pseudo doit contenir entre 3 et 50 caractères',
+                error: 'Les mots de passe ne correspondent pas',
                 username,
                 email
             });
         }
         
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
+        if (password.length < 6) {
             return fail(400, { 
-                error: 'Format d\'email invalide',
+                error: 'Le mot de passe doit contenir au moins 6 caractères',
                 username,
                 email
             });
         }
         
-        // Validate password length
-        if (password.length < 8) {
+        // Tenter l'enregistrement
+        const result = await registerUser({ username, email, password });
+        
+        if (!result.success) {
             return fail(400, { 
-                error: 'Le mot de passe doit contenir au moins 8 caractères',
+                error: result.error || 'Erreur d\'enregistrement',
                 username,
                 email
             });
         }
         
-        try {
-            // Check if email or username already exists
-            const { data: existingUser, error: checkError } = await supabase
-                .from('users')
-                .select('*')
-                .or(`email.eq.${email},username.eq.${username}`)
-                .single();
-            
-            if (checkError && checkError.code !== 'PGRST116') {
-                throw checkError;
-            }
-            
-            if (existingUser) {
-                if (existingUser.email === email) {
-                    return fail(400, { 
-                        error: 'Un compte avec cet email existe déjà',
-                        username,
-                        email
-                    });
-                }
-                
-                if (existingUser.username === username) {
-                    return fail(400, { 
-                        error: 'Ce pseudo est déjà utilisé',
-                        username,
-                        email
-                    });
-                }
-            }
-            
-            // Hash the password
-            const saltRounds = 10;
-            const hashedPassword = hashPassword(password);
-            
-            // Insert new user
-            const { error } = await supabase
-                .from('users')
-                .insert({
-                    username,
-                    email,
-                    password: hashedPassword,
-                    created_at: new Date().toISOString()
-                });
-            
-            if (error) {
-                return fail(500, { 
-                    error: `Erreur lors de la création du compte: ${error.message}`,
-                    username,
-                    email
-                });
-            }
-            
-            // Renvoyer un succès au lieu d'une redirection immédiate
-            return {
-                success: true, 
-                message: 'Compte créé !', 
-                redirect: '/login'
-            };
-        } catch (e) {
-            console.error('Exception:', e);
-            
-            if (e instanceof Response) {
-                throw e; // C'est une redirection
-            }
-            
+        // Si l'enregistrement réussit, connecter l'utilisateur automatiquement
+        const loginResult = await loginUser({ email, password }, cookies);
+        
+        if (!loginResult.success) {
             return fail(500, { 
-                error: e instanceof Error ? e.message : 'Erreur inconnue',
+                error: 'Compte créé mais connexion automatique échouée. Veuillez vous connecter manuellement.',
                 username,
                 email
             });
         }
+        
+        // Rediriger vers la page demandée ou l'accueil
+        const redirectTo = url.searchParams.get('redirect') || '/';
+        throw redirect(302, redirectTo);
     }
 };

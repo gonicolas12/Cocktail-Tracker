@@ -1,123 +1,37 @@
-import { supabase } from '$lib/supabase-server';
-import { fail } from '@sveltejs/kit';
+import { redirectIfAuthenticated } from '$lib/auth-protect';
+import { loginUser } from '$lib/auth';
+import { redirect, fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
-import { hashPassword } from '$lib/auth';
+
+// Protection de la route - rediriger si déjà connecté
+export const load = redirectIfAuthenticated;
 
 export const actions: Actions = {
-    default: async ({ request, cookies }) => {
-        let emailOrUsername = '';
+    default: async ({ request, cookies, url }) => {
+        const formData = await request.formData();
+        const email = formData.get('email') as string;
+        const password = formData.get('password') as string;
         
-        try {
-            const formData = await request.formData();
-            emailOrUsername = formData.get('email') as string;
-            const password = formData.get('password') as string;
-            
-            console.log('Tentative de connexion pour:', emailOrUsername);
-            
-            // Validation basique
-            if (!emailOrUsername || !password) {
-                return fail(400, { 
-                    error: 'Email/Pseudo et mot de passe sont requis',
-                    email: emailOrUsername
-                });
-            }
-            
-            // Requête pour trouver l'utilisateur
-            const { data: users, error: queryError } = await supabase
-                .from('users')
-                .select('id, username, email, password')
-                .or(`email.eq."${emailOrUsername}",username.eq."${emailOrUsername}"`);
-            
-            if (queryError) {
-                console.error('Erreur SQL:', queryError);
-                return fail(500, { 
-                    error: 'Erreur lors de la recherche de l\'utilisateur',
-                    email: emailOrUsername
-                });
-            }
-            
-            console.log('Résultats trouvés:', users?.length || 0);
-            
-            // Vérifier si on a trouvé un utilisateur
-            if (!users || users.length === 0) {
-                return fail(400, { 
-                    error: 'Identifiants invalides',
-                    email: emailOrUsername
-                });
-            }
-            
-            // Prendre le premier utilisateur correspondant
-            const user = users[0];
-            
-            // Hacher le mot de passe saisi pour la comparaison
-            const hashedPassword = hashPassword(password);
-            
-            console.log('Vérification du mot de passe');
-            
-            // Vérifier le mot de passe
-            if (hashedPassword !== user.password) {
-                return fail(400, { 
-                    error: 'Identifiants invalides',
-                    email: emailOrUsername
-                });
-            }
-            
-            console.log('Mot de passe validé, création de session');
-            
-            // Créer une session
-            const sessionToken = crypto.randomUUID();
-            
-            try {
-                // Supprimer les anciennes sessions de cet utilisateur
-                await supabase
-                    .from('sessions')
-                    .delete()
-                    .eq('user_id', user.id);
-                
-                // Ajouter la nouvelle session
-                const { error: sessionError } = await supabase
-                    .from('sessions')
-                    .insert({
-                        user_id: user.id,
-                        token: sessionToken,
-                        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-                    });
-                
-                if (sessionError) {
-                    throw sessionError;
-                }
-            } catch (sessionErr) {
-                console.error('Erreur session:', sessionErr);
-                return fail(500, { 
-                    error: 'Erreur lors de la création de la session',
-                    email: emailOrUsername
-                });
-            }
-            
-            console.log('Définition du cookie');
-            
-            // Définir le cookie
-            cookies.set('session', sessionToken, {
-                path: '/',
-                httpOnly: true,
-                sameSite: 'strict',
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 24 * 60 * 60 // 24 heures
-            });
-            
-            // Retourner un indicateur de succès pour que le client puisse rediriger
-            return {
-                success: true,
-                loginCompleted: true
-            };
-            
-        } catch (err) {
-            console.error('Exception générale:', err);
-            
-            return fail(500, { 
-                error: err instanceof Error ? err.message : 'Erreur de connexion',
-                email: emailOrUsername
+        // Validation de base
+        if (!email || !password) {
+            return fail(400, { 
+                error: 'Email et mot de passe sont requis',
+                email
             });
         }
+        
+        // Tenter la connexion
+        const result = await loginUser({ email, password }, cookies);
+        
+        if (!result.success) {
+            return fail(401, { 
+                error: result.error || 'Erreur de connexion',
+                email
+            });
+        }
+        
+        // Si connexion réussie, rediriger vers la page demandée ou l'accueil
+        const redirectTo = url.searchParams.get('redirect') || '/';
+        throw redirect(302, redirectTo);
     }
 };

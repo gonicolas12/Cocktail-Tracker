@@ -1,4 +1,5 @@
-export type Cocktail = {
+
+export interface Cocktail {
     id: number;
     title: string;
     ingredients: string[];
@@ -7,9 +8,15 @@ export type Cocktail = {
     created_at?: string;
     created_by?: number;
     user_username?: string;
-};
+}
 
-export type CocktailFormData = {
-    title: string;
-    ingredients: string; // Les ingredients seront entrés comme une chaîne séparée par des virgules
-};
+// Ajoutez une interface pour les commentaires
+export interface Comment {
+    id: number;
+    content: string;
+    created_at: string;
+    user_id: number;
+    users: {
+        username: string;
+    } | { username: string }[]; // Adapté à différentes structures possibles
+}

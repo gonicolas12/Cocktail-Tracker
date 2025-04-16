@@ -1,27 +1,31 @@
-import { supabase } from '$lib/supabase-server';
+import { logoutUser } from '$lib/auth';
 import { redirect } from '@sveltejs/kit';
-import type { Actions } from '@sveltejs/kit';
+import type { Actions, ServerLoad } from '@sveltejs/kit';
 
+export const load: ServerLoad = async ({ locals, cookies }) => {
+    if (!locals.user) {
+        throw redirect(302, '/');
+    }
+    
+    // Récupérer le token de session depuis les cookies
+    const sessionToken = cookies.get('session');
+    
+    if (sessionToken) {
+        await logoutUser(sessionToken, cookies);
+    }
+    
+    throw redirect(302, '/');
+};
+
+// Action pour le formulaire de déconnexion
 export const actions: Actions = {
-    default: async ({ cookies, locals }) => {
+    default: async ({ cookies }) => {
         const sessionToken = cookies.get('session');
         
-        try {
-            // Remove session from database if it exists
-            if (sessionToken) {
-                await supabase
-                    .from('sessions')
-                    .delete()
-                    .eq('token', sessionToken);
-            }
-            
-            // Clear session cookie
-            cookies.delete('session', { path: '/' });
-        } catch (error) {
-            console.error('Logout error:', error);
+        if (sessionToken) {
+            await logoutUser(sessionToken, cookies);
         }
         
-        // Redirect to login page
-        throw redirect(303, '/login');
+        throw redirect(302, '/');
     }
 };

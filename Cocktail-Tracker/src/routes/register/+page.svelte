@@ -1,69 +1,66 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
-    import { onMount } from 'svelte';
-    import { goto } from '$app/navigation';
+    import { page } from '$app/stores';
     
-    export let form: {
-        error?: string;
-        message?: string;
-        success?: boolean;
-        redirect?: string;
-        username?: string;
-        email?: string;
-    } | undefined = undefined;
+    export let form;
     
+    // Récupérer l'url de redirection des paramètres
+    $: redirectTo = $page.url.searchParams.get('redirect') || '/';
+    
+    // Variables de formulaire
+    let username = form?.username || '';
+    let email = form?.email || '';
     let password = '';
-    let confirmPassword = '';
-    let passwordError = '';
+    let passwordConfirm = '';
+    let loading = false;
     
-    function validatePasswords() {
-        if (password !== confirmPassword) {
-            passwordError = 'Les mots de passe ne correspondent pas';
-            return false;
-        }
-        passwordError = '';
-        return true;
+    // Validation côté client
+    $: passwordsMatch = password === passwordConfirm;
+    $: passwordLongEnough = password.length >= 6;
+    $: formValid = username && email && password && passwordConfirm && passwordsMatch && passwordLongEnough;
+    
+    // Gérer la soumission du formulaire avec une animation de chargement
+    function handleSubmit() {
+        if (!formValid) return;
+        
+        loading = true;
+        return async ({ result }: { result: { type: string } }) => {
+            loading = false;
+            if (result.type === 'redirect') {
+                // La redirection sera gérée automatiquement par SvelteKit
+            }
+        };
     }
-    
-    // Gérer la redirection après un succès
-    onMount(() => {
-        if (form?.success && form?.redirect) {
-            const redirectUrl = form.redirect;
-            setTimeout(() => {
-                goto(redirectUrl);
-            }, 3000); // Redirection après 3 secondes
-        }
-    });
 </script>
 
-<div class="register-container">
-    <h1>Créer un compte</h1>
-    
-    {#if form?.error}
-        <div class="message error">
-            <p>{form.error}</p>
-        </div>
-    {/if}
-    
-    {#if form?.success}
-        <div class="message success">
-            <p>{form.message || "Compte créé !"}</p>
-            <p>Vous allez être redirigé vers la page de connexion dans quelques secondes...</p>
-            <a href="/login" class="login-now-btn">Se connecter maintenant</a>
-        </div>
-    {:else}
-        <form method="POST" use:enhance class="register-form">
+<svelte:head>
+    <title>Cocktail Tracker - Inscription</title>
+</svelte:head>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>Créer un compte</h1>
+        
+        {#if form?.error}
+            <div class="message error">
+                <p>{form.error}</p>
+            </div>
+        {/if}
+        
+        <form method="POST" use:enhance={handleSubmit}>
+            <!-- Champ caché pour la redirection -->
+            <input type="hidden" name="redirect" value={redirectTo} />
+            
             <div class="form-group">
-                <label for="username">Pseudo</label>
+                <label for="username">Nom d'utilisateur</label>
                 <input 
                     type="text" 
                     id="username" 
                     name="username" 
-                    value={form?.username || ''} 
-                    placeholder="Votre pseudo"
+                    bind:value={username}
+                    placeholder="Votre nom d'utilisateur" 
                     required
-                    minlength="3"
-                    maxlength="50"
+                    autocomplete="username"
                 />
             </div>
             
@@ -73,9 +70,10 @@
                     type="email" 
                     id="email" 
                     name="email" 
-                    value={form?.email || ''} 
-                    placeholder="vous@exemple.com"
+                    bind:value={email}
+                    placeholder="votre@email.com" 
                     required
+                    autocomplete="email"
                 />
             </div>
             
@@ -85,53 +83,65 @@
                     type="password" 
                     id="password" 
                     name="password" 
-                    bind:value={password}
-                    placeholder="Mot de passe"
+                    bind:value={password} 
+                    placeholder="••••••••" 
                     required
-                    minlength="8"
+                    autocomplete="new-password"
                 />
-            </div>
-            
-            <div class="form-group">
-                <label for="confirm-password">Confirmer le mot de passe</label>
-                <input 
-                    type="password" 
-                    id="confirm-password" 
-                    bind:value={confirmPassword}
-                    placeholder="Confirmez le mot de passe"
-                    required
-                    on:input={validatePasswords}
-                />
-                {#if passwordError}
-                    <small class="error-text">{passwordError}</small>
+                {#if password && !passwordLongEnough}
+                    <span class="validation-error">Le mot de passe doit contenir au moins 6 caractères</span>
                 {/if}
             </div>
             
-            <div class="form-actions">
-                <button type="submit" class="submit-btn" disabled={!!passwordError}>
-                    Créer un compte
-                </button>
+            <div class="form-group">
+                <label for="passwordConfirm">Confirmez le mot de passe</label>
+                <input 
+                    type="password" 
+                    id="passwordConfirm" 
+                    name="passwordConfirm" 
+                    bind:value={passwordConfirm} 
+                    placeholder="••••••••" 
+                    required
+                    autocomplete="new-password"
+                />
+                {#if passwordConfirm && !passwordsMatch}
+                    <span class="validation-error">Les mots de passe ne correspondent pas</span>
+                {/if}
             </div>
             
-            <div class="login-link">
-                <p>Vous avez déjà un compte ? <a href="/login">Connectez-vous</a></p>
-            </div>
+            <button type="submit" class="submit-btn" disabled={loading || !formValid}>
+                {#if loading}
+                    Inscription en cours...
+                {:else}
+                    Créer mon compte
+                {/if}
+            </button>
         </form>
-    {/if}
+        
+        <div class="auth-footer">
+            <p>Déjà inscrit ? <a href="/login">Se connecter</a></p>
+        </div>
+    </div>
 </div>
 
 <style>
-    .register-container {
-        max-width: 400px;
-        margin: 0 auto;
-        padding: 20px;
+    .auth-container {
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 0 20px;
     }
     
-    .register-form {
+    .auth-card {
         background-color: white;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+    }
+    
+    h1 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #333;
     }
     
     .form-group {
@@ -141,13 +151,13 @@
     label {
         display: block;
         margin-bottom: 8px;
-        font-weight: bold;
+        font-weight: 500;
         color: #555;
     }
     
     input {
         width: 100%;
-        padding: 10px;
+        padding: 12px;
         border: 1px solid #ddd;
         border-radius: 4px;
         font-size: 16px;
@@ -159,11 +169,11 @@
         box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
     }
     
-    .error-text {
-        color: #ff4d4f;
-        font-size: 14px;
-        margin-top: 5px;
+    .validation-error {
         display: block;
+        margin-top: 5px;
+        color: #ff4d4f;
+        font-size: 0.85rem;
     }
     
     .submit-btn {
@@ -172,32 +182,34 @@
         color: white;
         border: none;
         border-radius: 4px;
-        padding: 12px;
+        padding: 14px;
         font-size: 16px;
+        font-weight: 500;
         cursor: pointer;
         transition: background-color 0.2s;
-    }
-    
-    .submit-btn:disabled {
-        background-color: #a0c4e8;
-        cursor: not-allowed;
     }
     
     .submit-btn:hover:not(:disabled) {
         background-color: #3a7bc8;
     }
     
-    .login-link {
-        text-align: center;
-        margin-top: 15px;
+    .submit-btn:disabled {
+        background-color: #a0c3e8;
+        cursor: not-allowed;
     }
     
-    .login-link a {
+    .auth-footer {
+        margin-top: 25px;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+    
+    .auth-footer a {
         color: #4a90e2;
         text-decoration: none;
     }
     
-    .login-link a:hover {
+    .auth-footer a:hover {
         text-decoration: underline;
     }
     
@@ -211,31 +223,5 @@
         background-color: #fff1f0;
         border-left: 4px solid #ff4d4f;
         color: #cf1322;
-    }
-    
-    .success {
-        background-color: #f6ffed;
-        border-left: 4px solid #52c41a;
-        color: #52c41a;
-        padding: 20px;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-    }
-    
-    .login-now-btn {
-        display: inline-block;
-        background-color: #4a90e2;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 4px;
-        text-decoration: none;
-        margin-top: 15px;
-        transition: background-color 0.2s;
-    }
-    
-    .login-now-btn:hover {
-        background-color: #3a7bc8;
-        text-decoration: none;
     }
 </style>
