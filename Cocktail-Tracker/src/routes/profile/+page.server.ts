@@ -4,7 +4,7 @@ import { fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
 import crypto from 'crypto';
 
-// Fonction pour hacher le mot de passe avec SHA-256 (comme votre système existant)
+// Fonction pour hacher le mot de passe avec SHA-256
 function hashPassword(password: string): string {
     return crypto.createHash('sha256').update(password).digest('hex');
 }
