@@ -19,9 +19,6 @@ Pour démarrer le projet, suivez ces étapes pour installer et lancer le projet 
    ```bash
    npm install
    ```
-   ```bash
-   npm install @sveltejs/kit@latest
-   ```
 
 **Lancer le serveur** :
 
