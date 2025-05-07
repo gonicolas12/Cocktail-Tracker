@@ -1,5 +1,3 @@
-import DOMPurify from 'isomorphic-dompurify';
-
 // Sanitiser les chaînes de caractères pour éviter les attaques XSS
 export function sanitizeString(input: string | null | undefined): string {
     if (input === null || input === undefined) {
@@ -9,10 +7,13 @@ export function sanitizeString(input: string | null | undefined): string {
     // Convertir en chaîne si ce n'est pas déjà le cas
     const stringInput = String(input);
     
-    // Utiliser DOMPurify pour supprimer tout code JavaScript/HTML dangereux
-    return DOMPurify.sanitize(stringInput, { 
-        USE_PROFILES: { html: false } // Ne pas autoriser le HTML
-    });
+    // Échapper les caractères spéciaux HTML
+    return stringInput
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 // Sanitiser un objet entier récursivement

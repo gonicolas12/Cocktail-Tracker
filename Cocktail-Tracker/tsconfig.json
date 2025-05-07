@@ -10,11 +10,7 @@
         "strict": true,
         "moduleResolution": "node",
         "module": "esnext",
-        "target": "esnext",
-        "paths": {
-            "$lib": ["./src/lib"],
-            "$lib/*": ["./src/lib/*"]
-        }
+        "target": "esnext"
     },
-    "include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.ts", "src/**/*.svelte"]
+    "extends": "./.svelte-kit/tsconfig.json"
 }
