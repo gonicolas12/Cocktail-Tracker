@@ -5,5 +5,13 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	ssr: {
 		external: ['crypto-js']
+	},
+	optimizeDeps: {
+		include: ['isomorphic-dompurify']
+	},
+	build: {
+		rollupOptions: {
+			external: []
+		}
 	}
 });
