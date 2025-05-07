@@ -5,7 +5,17 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
     preprocess: vitePreprocess(),
     kit: {
-        adapter: adapter()
+        adapter: adapter(),
+        vite: {
+            build: {
+                rollupOptions: {
+                    external: []
+                }
+            },
+            optimizeDeps: {
+                include: ['isomorphic-dompurify']
+            }
+        }
     }
 };
 
