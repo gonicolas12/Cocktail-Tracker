@@ -1,4 +1,3 @@
-// hooks.server.ts
 import { supabase } from '$lib/supabase-server';
 import { redirect, error } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';

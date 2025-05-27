@@ -1,4 +1,3 @@
-// lib/auth-protect.ts
 import { redirect } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 

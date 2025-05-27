@@ -1,4 +1,3 @@
-
 export interface Cocktail {
     id: number;
     title: string;
