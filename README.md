@@ -90,7 +90,7 @@ Une plateforme sociale moderne pour partager, découvrir et évaluer des recette
 
 ```bash
 git clone https://github.com/gonicolas12/Cocktail-Tracker.git
-cd cocktail-tracker
+cd Cocktail-tracker
 ```
 
 ### 2. Installer les dépendances
