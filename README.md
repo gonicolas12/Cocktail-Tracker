@@ -89,7 +89,7 @@ Une plateforme sociale moderne pour partager, découvrir et évaluer des recette
 ### 1. Cloner le repository
 
 ```bash
-git clone https://github.com/votre-username/cocktail-tracker.git
+git clone https://github.com/gonicolas12/Cocktail-Tracker.git
 cd cocktail-tracker
 ```
 
